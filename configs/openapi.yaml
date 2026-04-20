@@ -1,0 +1,893 @@
+openapi: 3.0.3
+info:
+  title: Delivery Service API
+  description: |
+    Система управления доставкой посылок (аналог СДЭК, DHL).
+    
+    ## Аутентификация
+    Защищённые эндпоинты требуют заголовок:
+    ```
+    Authorization: Bearer <JWT_TOKEN>
+    ```
+    
+    ## Получение токена
+    1. Зарегистрируйтесь: `POST /api/v1/users`
+    2. Получите токен: `POST /api/v1/login`
+    3. Используйте токен в заголовке `Authorization`
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@delivery.api
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Аутентификация пользователей
+  - name: Users
+    description: Управление пользователями и поиск
+  - name: Parcels
+    description: Управление посылками
+  - name: Deliveries
+    description: Управление доставками посылок
+  - name: Docs
+    description: Документация API
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен, полученный через endpoint /login
+
+  schemas:
+    # ==================== USER SCHEMAS ====================
+    
+    UserCreateRequest:
+      type: object
+      description: Запрос на создание нового пользователя
+      required: [login, password, first_name, last_name, email]
+      properties:
+        login:
+          type: string
+          description: Уникальный логин пользователя для входа в систему
+          minLength: 3
+          maxLength: 50
+          example: "john_doe"
+        password:
+          type: string
+          description: Пароль пользователя (минимум 6 символов)
+          minLength: 6
+          maxLength: 100
+          format: password
+          example: "secure123"
+        first_name:
+          type: string
+          description: Имя пользователя
+          example: "John"
+        last_name:
+          type: string
+          description: Фамилия пользователя
+          example: "Doe"
+        email:
+          type: string
+          description: Адрес электронной почты пользователя
+          format: email
+          example: "john@example.com"
+
+    UserResponse:
+      type: object
+      description: Информация о пользователе в ответе API
+      properties:
+        id:
+          type: integer
+          description: Уникальный идентификатор пользователя
+          format: int64
+          example: 1
+        login:
+          type: string
+          description: Логин пользователя
+          example: "john_doe"
+        first_name:
+          type: string
+          description: Имя пользователя
+          example: "John"
+        last_name:
+          type: string
+          description: Фамилия пользователя
+          example: "Doe"
+        email:
+          type: string
+          description: Адрес электронной почты
+          format: email
+          example: "john@example.com"
+        created_at:
+          type: string
+          description: Дата и время создания пользователя
+          format: date-time
+          example: "2026-03-28T07:45:11.337294+00:00"
+
+    # ==================== AUTH SCHEMAS ====================
+    
+    LoginRequest:
+      type: object
+      description: Запрос на аутентификацию пользователя для получения JWT токена
+      required: [login, password]
+      properties:
+        login:
+          type: string
+          description: Логин пользователя
+          example: "john_doe"
+        password:
+          type: string
+          description: Пароль пользователя
+          format: password
+          example: "secure123"
+
+    AuthResponse:
+      type: object
+      description: Ответ с JWT токеном после успешной аутентификации
+      properties:
+        access_token:
+          type: string
+          description: JWT токен доступа для авторизации защищённых endpoints
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        token_type:
+          type: string
+          description: Тип токена (всегда Bearer)
+          enum: [Bearer]
+          example: "Bearer"
+        user_id:
+          type: integer
+          description: Уникальный идентификатор аутентифицированного пользователя
+          format: int64
+          example: 1
+        login:
+          type: string
+          description: Логин аутентифицированного пользователя
+          example: "john_doe"
+
+    AuthTokenData:
+      type: object
+      description: Данные аутентифицированного пользователя, извлечённые из JWT токена (внутренняя структура)
+      properties:
+        user_id:
+          type: integer
+          description: Уникальный идентификатор пользователя из токена
+          format: int64
+          example: 1
+        login:
+          type: string
+          description: Логин пользователя из токена
+          example: "john_doe"
+        is_authenticated:
+          type: boolean
+          description: Флаг успешной аутентификации пользователя
+          example: true
+
+    # ==================== PARCEL SCHEMAS ====================
+    
+    ParcelCreateRequest:
+      type: object
+      description: Запрос на создание новой посылки
+      required: [sender_id, recipient_id, type, title, from_city, to_city, weight, price, status]
+      properties:
+        sender_id:
+          type: integer
+          description: Идентификатор отправителя посылки
+          format: int64
+          example: 1
+        recipient_id:
+          type: integer
+          description: Идентификатор получателя посылки
+          format: int64
+          example: 2
+        type:
+          type: string
+          description: Тип посылки
+          enum: [standard, fragile, oversized, express]
+          example: "standard"
+        title:
+          type: string
+          description: Название/описание посылки
+          minLength: 1
+          maxLength: 200
+          example: "Хрупкий груз"
+        description:
+          type: string
+          description: Подробное описание содержимого посылки
+          maxLength: 2000
+          example: "Стеклянная ваза, упакована в пузырчатую пленку"
+        from_city:
+          type: string
+          description: Город отправления
+          example: "Moscow"
+        to_city:
+          type: string
+          description: Город назначения
+          example: "Saint Petersburg"
+        address:
+          type: object
+          description: Адрес отправителя
+          example:
+            street: "ул. Тверская"
+            house: "10"
+            flat: "5"
+        weight:
+          type: number
+          description: Вес посылки в килограммах
+          format: double
+          minimum: 0.1
+          example: 2.5
+        price:
+          type: number
+          description: Стоимость доставки в рублях
+          format: double
+          minimum: 0
+          example: 500
+        details:
+          type: object
+          description: Дополнительные детали посылки
+          example:
+            is_fragile: true
+            dimensions:
+              length: 30
+              width: 20
+              height: 15
+        features:
+          type: array
+          description: Список особенностей посылки
+          items:
+            type: string
+          example: ["insurance", "priority"]
+        status:
+          type: string
+          description: Статус посылки
+          enum: [pending, in_transit, delivered, cancelled]
+          example: "pending"
+
+    ParcelResponse:
+      type: object
+      description: Информация о посылке в ответе API
+      properties:
+        id:
+          type: string
+          description: Уникальный идентификатор посылки (UUID)
+          example: "a6547b91-2ea1-4ad8-b044-3b1d00922517"
+        sender_id:
+          type: integer
+          description: Идентификатор отправителя
+          format: int64
+          example: 1
+        recipient_id:
+          type: integer
+          description: Идентификатор получателя
+          format: int64
+          example: 2
+        type:
+          type: string
+          description: Тип посылки
+          example: "standard"
+        title:
+          type: string
+          description: Название посылки
+          example: "Хрупкий груз"
+        description:
+          type: string
+          description: Описание посылки
+          example: "Стеклянная ваза, упакована в пузырчатую пленку"
+        from_city:
+          type: string
+          description: Город отправления
+          example: "Moscow"
+        to_city:
+          type: string
+          description: Город назначения
+          example: "Saint Petersburg"
+        address:
+          type: object
+          description: Адрес отправителя
+        weight:
+          type: number
+          description: Вес посылки в килограммах
+          format: double
+          example: 2.5
+        price:
+          type: number
+          description: Стоимость доставки
+          format: double
+          example: 500
+        details:
+          type: object
+          description: Дополнительные детали посылки
+        features:
+          type: array
+          description: Список особенностей
+          items:
+            type: string
+        status:
+          type: string
+          description: Текущий статус посылки
+          enum: [pending, in_transit, delivered, cancelled]
+          example: "pending"
+        created_at:
+          type: string
+          description: Дата и время создания записи
+          format: date-time
+          example: "2026-03-28T07:45:11.337294+00:00"
+
+    # ==================== DELIVERY SCHEMAS ====================
+    
+    TrackingEvent:
+      type: object
+      description: Событие в истории доставки
+      properties:
+        status:
+          type: string
+          description: Статус события
+          example: "picked_up"
+        timestamp:
+          type: string
+          description: Время события
+          format: date-time
+        location:
+          type: string
+          description: Местоположение
+          example: "Moscow"
+        reason:
+          type: string
+          description: Причина (для отмены)
+          example: "Sender request"
+
+    DeliveryCreateRequest:
+      type: object
+      description: Запрос на создание доставки посылки
+      required: [parcel_id, recipient_id, courier_id, pickup_time, estimated_delivery]
+      properties:
+        parcel_id:
+          type: string
+          description: Идентификатор посылки для доставки (UUID)
+          example: "a6547b91-2ea1-4ad8-b044-3b1d00922517"
+        recipient_id:
+          type: integer
+          description: Идентификатор получателя посылки
+          format: int64
+          example: 2
+        courier_id:
+          type: integer
+          description: Идентификатор курьера
+          format: int64
+          example: 101
+        pickup_time:
+          type: string
+          description: Запланированное время забора посылки
+          format: date-time
+          example: "2026-03-28T07:45:11.337294+00:00"
+        estimated_delivery:
+          type: string
+          description: Ожидаемая дата доставки
+          format: date-time
+          example: "2026-03-30T18:00:00+00:00"
+
+    DeliveryResponse:
+      type: object
+      description: Информация о доставке в ответе API
+      properties:
+        id:
+          type: string
+          description: Уникальный идентификатор доставки (UUID)
+          example: "4fe7782d-119b-44af-9076-39693b3b3560"
+        parcel_id:
+          type: string
+          description: Идентификатор посылки (UUID)
+          example: "a6547b91-2ea1-4ad8-b044-3b1d00922517"
+        recipient_id:
+          type: integer
+          description: Идентификатор получателя
+          format: int64
+          example: 2
+        courier_id:
+          type: integer
+          description: Идентификатор курьера
+          format: int64
+          example: 101
+        pickup_time:
+          type: string
+          description: Время забора посылки
+          format: date-time
+        estimated_delivery:
+          type: string
+          description: Ожидаемая дата доставки
+          format: date-time
+        actual_delivery:
+          type: string
+          description: Фактическая дата доставки
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          description: Статус доставки
+          enum: [pending, assigned, in_transit, delivered, cancelled]
+          example: "pending"
+        tracking_history:
+          type: array
+          description: История трекинга доставки
+          items:
+            $ref: '#/components/schemas/TrackingEvent'
+        created_at:
+          type: string
+          description: Дата и время создания записи
+          format: date-time
+
+    # ==================== ERROR SCHEMAS ====================
+    
+    ErrorResponse:
+      type: object
+      description: Стандартный формат ответа при ошибке API
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Машинный код ошибки для программной обработки
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Человекочитаемое описание ошибки
+          example: "Login and password required"
+        details:
+          type: object
+          description: Дополнительные детали ошибки (необязательно)
+          additionalProperties: true
+          example: { "field": "login", "reason": "too short" }
+
+  parameters:
+    # ==================== QUERY PARAMETERS ====================
+    
+    FromQueryParam:
+      name: from
+      in: query
+      description: Смещение начала выборки (> 0, для пагинации)
+      schema:
+        type: integer
+        format: int32
+        default: 1
+      example: 1
+
+    ToQueryParam:
+      name: to
+      in: query
+      description: Конечный индекс выборки (> 0, >= from, для пагинации)
+      schema:
+        type: integer
+        format: int32
+      example: 50
+    
+    LoginQueryParam:
+      name: login
+      in: query
+      description: Поиск пользователя по точному совпадению логина
+      schema:
+        type: string
+      example: "john_doe"
+
+    NameMaskQueryParam:
+      name: name_mask
+      in: query
+      description: Поиск по маске имени и фамилии (поддерживается * в конце)
+      schema:
+        type: string
+      example: "Ivan*"
+
+    FromCityQueryParam:
+      name: from_city
+      in: query
+      description: Фильтрация посылок по городу отправления
+      schema:
+        type: string
+      example: "Moscow"
+
+    MinWeightQueryParam:
+      name: min_weight
+      in: query
+      description: Минимальный вес посылки для фильтрации (в кг)
+      schema:
+        type: number
+        format: double
+      example: 1.0
+
+    MaxWeightQueryParam:
+      name: max_weight
+      in: query
+      description: Максимальный вес посылки для фильтрации (в кг)
+      schema:
+        type: number
+        format: double
+      example: 10.0
+
+    SenderIdQueryParam:
+      name: sender_id
+      in: query
+      description: Идентификатор отправителя для фильтрации посылок
+      schema:
+        type: integer
+        format: int64
+      example: 1
+
+    RecipientIdQueryParam:
+      name: recipient_id
+      in: query
+      description: Идентификатор получателя для фильтрации доставок
+      schema:
+        type: integer
+        format: int64
+      example: 2
+
+    ParcelIdPathParam:
+      name: parcel_id
+      in: path
+      description: Уникальный идентификатор посылки (UUID)
+      required: true
+      schema:
+        type: string
+      example: "a6547b91-2ea1-4ad8-b044-3b1d00922517"
+
+  responses:
+    Unauthorized:
+      description: Ошибка аутентификации
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            auth_error:
+              summary: Ошибка аутентификации
+              value: "Missing 'Authorization' header"
+    
+    Forbidden:
+      description: Доступ запрещен
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            forbidden_error:
+              summary: Ошибка доступа
+              value: "Token verification failed: ..."
+
+    Conflict:
+      description: Конфликт ресурсов
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            login_exists:
+              summary: Логин/почта уже существуют
+              value:
+                code: "CONFLICT"
+                message: "Login and/or email already exists"
+    
+    ConstraintsNotMatched:
+      description: Ошибка проверки бизнес-ограничений
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            constraints_error:
+              summary: Ограничения не выполнены
+              value:
+                code: "CONSTRAINTS_NOT_MATCHED"
+                message: "Constraints are violated"
+
+paths:
+  # ==================== AUTH ENDPOINTS ====================
+  
+  /login:
+    post:
+      tags: [Auth]
+      summary: Аутентификация пользователя (получение JWT токена)
+      description: Проверяет учётные данные и возвращает JWT токен для доступа к защищённым endpoints. Токен действителен 1 час.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid:
+                summary: Корректный запрос на вход
+                value:
+                  login: "john_doe"
+                  password: "secure123"
+      responses:
+        '200':
+          description: Успешная аутентификация, токен получен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Токен успешно получен
+                  value:
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    token_type: "Bearer"
+                    user_id: 1
+                    login: "john_doe"
+        '400':
+          description: Ошибка валидации входных данных запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation:
+                  summary: Ошибка валидации полей
+                  value:
+                    code: "VALIDATION_ERROR"
+                    message: "Invalid request body"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ==================== USER ENDPOINTS ====================
+  
+  /users:
+    post:
+      tags: [Users]
+      summary: Создание пользователя
+      description: Создает нового пользователя.
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Ошибка валидации входных данных запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation:
+                  summary: Ошибка валидации полей
+                  value:
+                    code: "VALIDATION_ERROR"
+                    message: "Invalid request body"
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ConstraintsNotMatched'
+
+    get:
+      tags: [Users]
+      summary: Поиск пользователей
+      description: |
+        Поиск пользователей по критериям:
+        - `?login=...` — точный поиск по логину
+        - `?name_mask=...` — поиск по маске имени/фамилии
+        - `?from=...&to=...` — пагинация результатов
+      operationId: searchUsers
+      parameters:
+        - $ref: '#/components/parameters/FromQueryParam'
+        - $ref: '#/components/parameters/ToQueryParam'
+        - $ref: '#/components/parameters/LoginQueryParam'
+        - $ref: '#/components/parameters/NameMaskQueryParam'
+      responses:
+        '200':
+          description: Список найденных пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Запрошенный пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== PARCEL ENDPOINTS ====================
+  
+  /parcels:
+    post:
+      tags: [Parcels]
+      summary: Создание посылки
+      description: Создаёт новую посылку для доставки. Требует аутентификации.
+      operationId: createParcel
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParcelCreateRequest'
+      responses:
+        '201':
+          description: Посылка успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelResponse'
+        '400':
+          description: Ошибка валидации входных данных запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Отправитель не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ConstraintsNotMatched'
+
+    get:
+      tags: [Parcels]
+      summary: Поиск посылок
+      description: |
+        Поиск посылок по критериям:
+        - `?sender_id=...` — получение посылок пользователя (отправителя)
+        - `?from_city=...` — фильтрация по городу отправления
+        - `?min_weight=...&max_weight=...` — фильтрация по диапазону веса
+        - `?from=...&to=...` — пагинация результатов
+      operationId: searchParcels
+      parameters:
+        - $ref: '#/components/parameters/FromQueryParam'
+        - $ref: '#/components/parameters/ToQueryParam'
+        - $ref: '#/components/parameters/FromCityQueryParam'
+        - $ref: '#/components/parameters/MinWeightQueryParam'
+        - $ref: '#/components/parameters/MaxWeightQueryParam'
+        - $ref: '#/components/parameters/SenderIdQueryParam'
+      responses:
+        '200':
+          description: Список найденных посылок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParcelResponse'
+        '400':
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== DELIVERY ENDPOINTS ====================
+  
+  /deliveries:
+    post:
+      tags: [Deliveries]
+      summary: Создание доставки
+      description: Создаёт доставку посылки от отправителя к получателю. Требует аутентификации.
+      operationId: createDelivery
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryCreateRequest'
+      responses:
+        '201':
+          description: Доставка успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '400':
+          description: Ошибка валидации входных данных запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Посылка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ConstraintsNotMatched'
+
+    get:
+      tags: [Deliveries]
+      summary: Получение информации о доставках
+      description: |
+        Получение доставок по критериям:
+        - `?recipient_id=...` — получение доставок по получателю
+        - `?sender_id=...` — получение доставок по отправителю
+      operationId: getDeliveries
+      parameters:
+        - $ref: '#/components/parameters/RecipientIdQueryParam'
+        - $ref: '#/components/parameters/SenderIdQueryParam'
+      responses:
+        '200':
+          description: Список найденных доставок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryResponse'
+        '400':
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ==================== DOCS ENDPOINTS ====================
+  
+  /docs/openapi.yaml:
+    get:
+      tags: [Docs]
+      summary: Получение OpenAPI спецификации
+      description: Возвращает сырую YAML-спецификацию API для интеграции с инструментами документации
+      operationId: getOpenApiSpec
+      responses:
+        '200':
+          description: OpenAPI спецификация в формате YAML
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+        '404':
+          description: Файл спецификации не найден на сервере
+
+  /docs:
+    get:
+      tags: [Docs]
+      summary: Swagger UI интерфейс
+      description: Интерактивная документация API через Swagger UI для тестирования endpoints
+      operationId: getSwaggerUi
+      responses:
+        '200':
+          description: HTML страница Swagger UI
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML содержимое страницы Swagger UI
+              examples:
+                response:
+                  summary: Результат успешного запроса
+                  value: "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Real Delivery Service API - Swagger UI</title>\n    ..."
