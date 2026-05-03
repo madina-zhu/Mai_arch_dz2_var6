@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="639784bc-462c-4508-ae3a-e541833a3239" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/delivery-service-api.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/openapi.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/static_config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/auth_component.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/auth_component.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/mongo_storage_component.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/mongo_storage_component.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/postgres_storage_component.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/postgres_storage_component.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_delivery_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_delivery_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_parcel_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_parcel_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_user_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/create_user_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/get_parcels_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/get_parcels_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/get_users_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/get_users_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/login_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/login_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/openapi_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/openapi_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/swagger_ui_handler.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/swagger_ui_handler.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jwt_auth/jwt_auth_checker.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jwt_auth/jwt_auth_checker.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jwt_auth/jwt_auth_factory.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/jwt_auth/jwt_auth_factory.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/auth.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/auth.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/delivery.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/delivery.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/dto.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/error.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/error.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/parcel.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/parcel.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/user.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/user.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/test_api.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="3DEI6bPplPFxPiKMXxxxYc28kt8" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="639784bc-462c-4508-ae3a-e541833a3239" name="Changes" comment="" />
+      <created>1777840630544</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1777840630544</updated>
+    </task>
+    <servers />
+  </component>
+</project>
