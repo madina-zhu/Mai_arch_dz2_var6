@@ -1,0 +1,53 @@
+#pragma once
+
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
+#include <chrono>
+#include <userver/formats/json.hpp>
+
+namespace models::dto
+{
+
+  struct ParcelCreateRequest
+  {
+    int64_t sender_id;
+    double weight;
+    std::string dimensions;
+    double declared_value;
+    std::optional<std::string> description;
+    std::optional<std::vector<std::string>> features; // можно оставить, полезно
+  };
+
+  struct ParcelResponse
+  {
+    std::string id; // В MongoDB id будет строкой (UUID)
+    int64_t sender_id;
+    double weight;
+    std::string dimensions;
+    double declared_value;
+    std::optional<std::string> description;
+    std::string status; // created, assigned, in_transit, delivered
+    std::chrono::system_clock::time_point created_at;
+    std::optional<std::vector<std::string>> features;
+  };
+
+  // Сериализация/парсинг JSON
+  userver::formats::json::Value
+  Serialize(const ParcelCreateRequest &data,
+            userver::formats::serialize::To<userver::formats::json::Value>);
+
+  userver::formats::json::Value
+  Serialize(const ParcelResponse &data,
+            userver::formats::serialize::To<userver::formats::json::Value>);
+
+  ParcelCreateRequest
+  Parse(const userver::formats::json::Value &json,
+        userver::formats::parse::To<ParcelCreateRequest>);
+
+  ParcelResponse
+  Parse(const userver::formats::json::Value &json,
+        userver::formats::parse::To<ParcelResponse>);
+
+} // namespace models::dto

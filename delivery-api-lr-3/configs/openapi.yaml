@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Delivery API (CDEK-like)
+  description: Сервис управления доставкой посылок
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserCreateRequest:
+      type: object
+      required: [login, password, first_name, last_name, email]
+      properties:
+        login: {type: string}
+        password: {type: string}
+        first_name: {type: string}
+        last_name: {type: string}
+        email: {type: string}
+
+    UserResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        login: {type: string}
+        first_name: {type: string}
+        last_name: {type: string}
+        email: {type: string}
+        created_at: {type: string, format: date-time}
+
+    LoginRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login: {type: string}
+        password: {type: string}
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token: {type: string}
+        token_type: {type: string}
+        user_id: {type: integer}
+        login: {type: string}
+
+    ParcelCreateRequest:
+      type: object
+      required: [sender_id, weight, dimensions, declared_value]
+      properties:
+        sender_id: {type: integer}
+        weight: {type: number}
+        dimensions: {type: string}
+        declared_value: {type: number}
+        description: {type: string}
+
+    ParcelResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        sender_id: {type: integer}
+        weight: {type: number}
+        dimensions: {type: string}
+        declared_value: {type: number}
+        description: {type: string}
+        status: {type: string}
+        created_at: {type: string, format: date-time}
+
+    DeliveryCreateRequest:
+      type: object
+      required: [parcel_id, sender_id, receiver_id, from_address, to_address]
+      properties:
+        parcel_id: {type: integer}
+        sender_id: {type: integer}
+        receiver_id: {type: integer}
+        from_address: {type: string}
+        to_address: {type: string}
+        scheduled_pickup_time: {type: string, format: date-time}
+
+    DeliveryResponse:
+      type: object
+      properties:
+        id: {type: integer}
+        parcel_id: {type: integer}
+        sender_id: {type: integer}
+        receiver_id: {type: integer}
+        tracking_number: {type: string}
+        status: {type: string}
+        from_address: {type: string}
+        to_address: {type: string}
+        created_at: {type: string, format: date-time}
+        delivered_at: {type: string, format: date-time, nullable: true}
+
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: {type: string}
+        message: {type: string}
+        details: {type: object}
+
+paths:
+  /ping:
+    get:
+      responses:
+        '200': {description: OK}
+
+  /login:
+    post:
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401': {description: Неверные учетные данные}
+
+  /users:
+    post:
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '409': {description: Логин или email уже существуют}
+
+    get:
+      tags: [Users]
+      parameters:
+        - name: from
+          in: query
+          schema: {type: integer, default: 1}
+        - name: to
+          in: query
+          schema: {type: integer}
+        - name: login
+          in: query
+          schema: {type: string}
+        - name: name_mask
+          in: query
+          schema: {type: string}
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '404': {description: Пользователь не найден}
+
+  /parcels:
+    post:
+      tags: [Parcels]
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParcelCreateRequest'
+      responses:
+        '201':
+          description: Посылка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelResponse'
+        '401': {description: Не авторизован}
+        '404': {description: Отправитель не найден}
+
+    get:
+      tags: [Parcels]
+      parameters:
+        - name: from
+          in: query
+          schema: {type: integer, default: 1}
+        - name: to
+          in: query
+          schema: {type: integer}
+        - name: user_id
+          in: query
+          required: true
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Список посылок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParcelResponse'
+
+  /deliveries:
+    post:
+      tags: [Deliveries]
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryCreateRequest'
+      responses:
+        '201':
+          description: Доставка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryResponse'
+        '401': {description: Не авторизован}
+        '404': {description: Посылка или получатель не найдены}
+
+    get:
+      tags: [Deliveries]
+      parameters:
+        - name: from
+          in: query
+          schema: {type: integer, default: 1}
+        - name: to
+          in: query
+          schema: {type: integer}
+        - name: tracking_number
+          in: query
+          schema: {type: string}
+        - name: sender_id
+          in: query
+          schema: {type: integer}
+        - name: receiver_id
+          in: query
+          schema: {type: integer}
+      responses:
+        '200':
+          description: Список доставок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeliveryResponse'
+        '404': {description: Доставка не найдена}
+
+  /docs/openapi.yaml:
+    get:
+      tags: [Docs]
+      responses:
+        '200':
+          description: OpenAPI спецификация
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+
+  /docs:
+    get:
+      tags: [Docs]
+      responses:
+        '200':
+          description: Swagger UI
+          content:
+            text/html:
+              schema:
+                type: string

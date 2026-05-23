@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    container_name: delivery_api
+    ports:
+      - "8080:8080"
+    environment:
+      - USERVER_LOG_LEVEL=INFO
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  mongodb:
+    image: mongo:7
+    container_name: mongodb_delivery
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: delivery_db
+    volumes:
+      - mongodb_data:/data/db
+      - ./validation.js:/docker-entrypoint-initdb.d/validation.js
+      - ./queries.js:/queries.js
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  app_network:
+    driver: bridge

@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: Delivery API (CDEK-like)
+  description: Сервис управления доставкой посылок.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+
+paths:
+  /users:
+    post:
+      # ... создание пользователя
+    get:
+      # ... поиск пользователей
+
+  /parcels:
+    post:
+      summary: Создание посылки
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParcelCreateRequest'
+      responses:
+        '201': { description: Посылка создана }
+        '401': { description: Не авторизован }
+    get:
+      summary: Получение посылок пользователя
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema: { type: integer }
+        - name: from
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: to
+          in: query
+          schema: { type: integer }
+      responses:
+        '200': { description: Список посылок }
+
+  /deliveries:
+    post:
+      summary: Создание доставки
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryCreateRequest'
+      responses:
+        '201': { description: Доставка создана }
+        '401': { description: Не авторизован }
+    get:
+      summary: Получение информации о доставке
+      parameters:
+        - name: tracking_number
+          in: query
+          schema: { type: string }
+        - name: sender_id
+          in: query
+          schema: { type: integer }
+        - name: receiver_id
+          in: query
+          schema: { type: integer }
+        - name: from
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: to
+          in: query
+          schema: { type: integer }
+      responses:
+        '200': { description: Список доставок }
+        '404': { description: Доставка не найдена }
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ParcelCreateRequest:
+      type: object
+      required: [sender_id, weight, dimensions, declared_value]
+      properties:
+        sender_id: { type: integer }
+        weight: { type: number, description: Weight in kg }
+        dimensions: { type: string, description: "Length x Width x Height in cm" }
+        declared_value: { type: number }
+        description: { type: string }
+    ParcelResponse: # ... аналогично
+    DeliveryCreateRequest:
+      type: object
+      required: [parcel_id, sender_id, receiver_id, from_address, to_address]
+      properties:
+        parcel_id: { type: string }
+        sender_id: { type: integer }
+        receiver_id: { type: integer }
+        from_address: { type: string }
+        to_address: { type: string }
+    DeliveryResponse:
+      type: object
+      properties:
+        id: { type: string }
+        parcel_id: { type: string }
+        tracking_number: { type: string }
+        status: { type: string }
+        # ... остальные поля
